@@ -1,28 +1,17 @@
 const express = require('express');
 const multer = require('multer');
-const { exec } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-
+const Tesseract = require('tesseract.js');
 const app = express();
-const upload = multer({ dest: 'uploads/' });
+const upload = multer();
 
-app.post('/ocr', upload.single('image'), (req, res) => {
-  const imgPath = req.file.path;
-  const outPath = `${imgPath}-out.txt`;
+app.post('/', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
 
-  exec(`tesseract ${imgPath} ${imgPath} -l spa`, (err) => {
-    if (err) {
-      return res.status(500).json({ error: 'OCR failed' });
-    }
+  const buffer = req.file.buffer;
 
-    fs.readFile(`${imgPath}.txt`, 'utf8', (err, data) => {
-      fs.unlinkSync(imgPath);
-      fs.unlinkSync(`${imgPath}.txt`);
-      if (err) return res.status(500).json({ error: 'Read failed' });
-      res.json({ text: data });
-    });
-  });
+  const result = await Tesseract.recognize(buffer, 'eng', { logger: m => console.log(m) });
+
+  res.json({ text: result.data.text });
 });
-
-app.listen(3000, () => console.log('OCR API listening on port 3000'));
