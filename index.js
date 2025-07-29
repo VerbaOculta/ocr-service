@@ -11,7 +11,19 @@ app.post('/', upload.single('file'), async (req, res) => {
 
   const buffer = req.file.buffer;
 
-  const result = await Tesseract.recognize(buffer, 'eng', { logger: m => console.log(m) });
+  try {
+    const result = await Tesseract.recognize(buffer, 'eng', {
+      logger: m => console.log(m),
+    });
 
-  res.json({ text: result.data.text });
+    res.json({ text: result.data.text });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'OCR processing failed' });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`OCR service running on port ${PORT}`);
 });
