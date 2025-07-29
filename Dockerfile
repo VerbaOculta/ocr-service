@@ -16,5 +16,5 @@ RUN npm install
 COPY . .
 
 # Exponer puerto y comando de inicio
-EXPOSE 3000
+EXPOSE ${PORT}
 CMD ["node", "index.js"]
